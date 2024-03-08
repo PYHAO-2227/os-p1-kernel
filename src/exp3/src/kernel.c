@@ -22,12 +22,17 @@ void kernel_main(void)
 
 	// a = a / 0; 
 	// asm("mrs x0, elr_el2"); // will trigger exception at EL1
-	// asm("hvc #0");
+	asm("hvc #0");
+	printf("I'm back!\n");
+	int el = get_el();
+	printf("Exception level: %d \r\n", el);
 	// asm("msr	hcr_el2, x0");
 
-	//printf("going to call wfi...");
-	//asm("wfi");
-	//printf("we're back!");
+	// printf("going to call wfi...");
+	// asm("wfi");
+	// printf("we're back!");
+
+
 
 	while (1) {
 		uart_send(uart_recv());

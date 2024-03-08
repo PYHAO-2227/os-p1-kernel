@@ -19,7 +19,12 @@ master:
 	msr	sctlr_el1, x0		
 
 	ldr	x0, =HCR_VALUE  	// Hypervisor Configuration (EL2) 
-	msr	hcr_el2, x0  
+	msr	hcr_el2, x0
+
+	adr	x0, vectors_el2		
+	msr	vbar_el2, x0
+
+	mov	sp, #SPEL2_MEMORY	  
 
 #ifdef USE_QEMU 			// QEMU boots from EL2. cannot do things to EL3			
 	ldr	x0, =SPSR_VALUE		// SPSR_VALUE controls the consequence of exception return (eret), including the new exception level (EL1)

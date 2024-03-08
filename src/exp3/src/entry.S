@@ -51,7 +51,7 @@
 	str	x30, [sp, #16 * 15] 
 	.endm
 
-	// A mirror of kernel_entry (above), to be called as the last thing of an exception handler
+	// A mirror of kernel_entry, to be called as the last thing of an exception handler
 	.macro	kernel_exit
 	// restores the CPU state by copying back the values of x0 - x30
 	ldp	x0, x1, [sp, #16 * 0]
@@ -95,7 +95,7 @@ vectors:
 	ventry	error_invalid_el1t			// Error EL1t
 
 	// EL1h -- Exception happens at EL1 at the time when a dedicated SP was allocated for EL1.
-	//  		This is the mode that our kernel is currently using
+	//  		This is the mode that our kernel is are currently using
 	ventry	sync_invalid_el1h			// Synchronous EL1h   (also try ventry try_to_return)
 	ventry	el1_irq						// IRQ EL1h
 	ventry	fiq_invalid_el1h			// FIQ EL1h
@@ -171,8 +171,82 @@ error_invalid_el0_32:
  .align	11
 .globl vectors_el2
 vectors_el2:
-	/* --- add yours ---  */
+	//  EL2t -- Exception happens when CPU is at EL2 while the stack pointer (SP) was set to be shared with EL0
+	ventry	sync_invalid_el2t			// Synchronous EL2t
+	ventry	irq_invalid_el2t			// IRQ EL2t
+	ventry	fiq_invalid_el2t			// FIQ EL2t
+	ventry	error_invalid_el2t			// Error EL2t
 
+	// EL2h -- Exception happens at EL2 at the time when a dedicated SP was allocated for EL2.
+	//  		This is the mode that our kernel is are currently using
+	ventry	sync_invalid_el2h			// Synchronous EL2h   (also try ventry try_to_return)
+	ventry	irq_invalid_el2h			// IRQ EL2h
+	ventry	fiq_invalid_el2h			// FIQ EL2h
+	ventry	error_invalid_el2h			// Error EL2h
+
+	// EL1_64 -- Exception is taken from EL1 executing in 64-bit mode. 
+	//		The exceptions caused in 64-bit user programs
+	ventry	el2_sync_handler_64			// Synchronous 64-bit EL1
+	ventry	irq_invalid_el1_64			// IRQ 64-bit EL1
+	ventry	fiq_invalid_el1_64			// FIQ 64-bit EL1
+	ventry	error_invalid_el1_64			// Error 64-bit EL1
+
+	// EL1_32 -- Exception is taken from EL1 executing in 32-bit mode
+	//		The exceptions caused in 32-bit user programs
+	ventry	sync_invalid_el1_32			// Synchronous 32-bit EL1
+	ventry	irq_invalid_el1_32			// IRQ 32-bit EL1
+	ventry	fiq_invalid_el1_32			// FIQ 32-bit EL1
+	ventry	error_invalid_el1_32			// Error 32-bit EL1
+
+sync_invalid_el2t:
+	handle_invalid_entry  SYNC_INVALID_EL2t
+
+irq_invalid_el2t:
+	handle_invalid_entry  IRQ_INVALID_EL2t
+
+fiq_invalid_el2t:
+	handle_invalid_entry  FIQ_INVALID_EL2t
+
+error_invalid_el2t:
+	handle_invalid_entry  ERROR_INVALID_EL2t
+
+sync_invalid_el2h:
+	handle_invalid_entry  SYNC_INVALID_EL2h
+
+irq_invalid_el2h:
+	handle_invalid_entry  IRQ_INVALID_EL2h
+
+fiq_invalid_el2h:
+	handle_invalid_entry  FIQ_INVALID_EL2h
+
+error_invalid_el2h:
+	handle_invalid_entry  ERROR_INVALID_EL2h
+
+irq_invalid_el1_64:
+	handle_invalid_entry  IRQ_INVALID_EL1_64
+
+fiq_invalid_el1_64:
+	handle_invalid_entry  FIQ_INVALID_EL1_64
+
+error_invalid_el1_64:
+	handle_invalid_entry  ERROR_INVALID_EL1_64
+
+sync_invalid_el1_32:
+	handle_invalid_entry  SYNC_INVALID_EL1_32
+
+irq_invalid_el1_32:
+	handle_invalid_entry  IRQ_INVALID_EL1_32
+
+fiq_invalid_el1_32:
+	handle_invalid_entry  FIQ_INVALID_EL1_32
+
+error_invalid_el1_32:
+	handle_invalid_entry  ERROR_INVALID_EL1_32
+
+el2_sync_handler_64:
+	kernel_entry
+	bl handle_sync
+	kernel_exit
 
 el1_irq:
 	kernel_entry 

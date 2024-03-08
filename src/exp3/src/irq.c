@@ -41,6 +41,11 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
     printf("%s, ESR: %x, address: %x\r\n", entry_error_messages[type], esr, address);
 }
 
+void handle_sync(void)
+{
+    printf("The sync exception from EL1 has been handled! \n");
+}
+
 void handle_irq(void)
 {
     // Interrupt controller can help us with this job: it has `INT_SOURCE_0` register that holds interrupt status for interrupts `0 - 31`. 
