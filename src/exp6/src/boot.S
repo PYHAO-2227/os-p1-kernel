@@ -82,7 +82,7 @@ el1_entry:
 	adrp	x0, idmap_dir
 	msr	ttbr0_el1, x0
 #endif
-
+	// Todo: Enable kernel to access other section of the physical memory, modify the kernel table tree. 
 	bl 	__create_page_tables
 
 	mov	x0, #VA_START			
