@@ -16,14 +16,21 @@
 
 void user_process1(char *array)
 {
+	unsigned int value;
+    asm volatile("mrs %0, CurrentEL" : "=r" (value) :: "memory");
+	printf("CurrentEl = %d\n\r", value);
 	char buf[2] = {0};
-	while (1){
-		for (int i = 0; i < 5; i++){
-			buf[0] = array[i];
-			call_sys_write(buf);
-			delay(DELAYS);
-		}
+
+	// while (1){
+	for (int i = 0; i < 5; i++){
+		buf[0] = array[i];
+		call_sys_write(buf);
+		delay(DELAYS);
 	}
+
+	delay(5000000);
+	// }
+	// return;
 }
 
 void user_process(){
@@ -59,9 +66,7 @@ void kernel_process(){
 	if (err < 0) {
 		printf("Error while moving process to user mode\n\r");
 	} 
-	// this func is called from ret_from_fork (entry.S). after returning, it goes back to 
-	// ret_from_fork and does kernel_exit there. hence, pt_regs populated by move_to_user_mode()
-	// will take effect. 
+	return;
 }
 
 void kernel_main(void)
@@ -84,5 +89,6 @@ void kernel_main(void)
 
 	while (1) {
 		schedule();
+		// printf("Still functional!\n\r");
 	}	
 }

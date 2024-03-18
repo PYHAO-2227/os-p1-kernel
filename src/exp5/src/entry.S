@@ -8,7 +8,7 @@
 	mrs	x1, esr_el1
 	mrs	x2, elr_el1
 	bl	show_invalid_entry_message
-	b	err_hang
+	b	get_back
 	.endm
 
 	.macro	ventry	label
@@ -68,12 +68,19 @@
 	msr	sp_el0, x21
 	.endif /* \el == 0 */
 
+	.if	\el == 9
+	msr	sp_el0, x21
+	add x22, x22, #4
+	.endif /* \el == 0 */
+
+
 	msr	elr_el1, x22			
 	/* This EL level is encoded in the `spsr_el1` register that was saved, 
 		e.g. when syscall enters the kernel. So `eret` below always return to the 
 		level from which the exception was taken. */
 	msr	spsr_el1, x23
 
+	
 	ldp	x0, x1, [sp, #16 * 0]
 	ldp	x2, x3, [sp, #16 * 1]
 	ldp	x4, x5, [sp, #16 * 2]
@@ -215,3 +222,8 @@ ret_to_user:
 
 .globl err_hang
 err_hang: b err_hang
+
+.globl get_back
+get_back:
+	kernel_exit 9
+

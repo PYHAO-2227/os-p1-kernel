@@ -40,9 +40,7 @@ call_sys_clone:
 	ret							/*  we're the parent. syscall done. */
 
 thread_start:					/* we're the child ... */
-	/* clear FP, for correct stack unwinding at the user level. 
-	   stack unwinding will stops when reaching FP=0 */
-	mov	x29, 0					
+	mov	x29, 0					/* clear FP, for correct stack unwinding at the user level */
 
 	/* Pick the function arg and execute.  */
 	mov	x0, x11
