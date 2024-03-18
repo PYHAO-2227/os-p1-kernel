@@ -23,3 +23,7 @@ cpu_switch_to:
 	mov	sp, x9
 	ret							// branch to LR (which was just loaded from memory)
 
+.globl get_cntpct
+get_cntpct:
+	mrs x0, cntpct_el0
+	ret

@@ -2,10 +2,26 @@
 #include "irq.h"
 #include "printf.h"
 
+// Todo init the first record and record array
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
 struct task_struct * task[NR_TASKS] = {&(init_task), };
 int nr_tasks = 1;
+
+static struct switch_record preallocated_records[MAX_CONTEXT_SWITCHES];
+struct switch_record *records[MAX_CONTEXT_SWITCHES];
+struct switch_record *cur_record;
+int record_num = 0;
+
+void init_records() {
+    // Init records
+    for (int i = 0; i < MAX_CONTEXT_SWITCHES; i++) {
+        records[i] = &preallocated_records[i];
+    }
+    cur_record = records[0];
+}
+
+int second = (1 << 26);
 
 void preempt_disable(void)
 {
@@ -17,6 +33,17 @@ void preempt_enable(void)
 	current->preempt_count--;
 }
 
+// Get id for the current task
+int get_pid(void)
+{
+	return current->pid;
+}
+// Get timestamp
+unsigned long get_time_ms(void) {
+    unsigned long cntpct;
+    cntpct = get_cntpct();
+    return cntpct / (second / 1000);
+}
 
 void _schedule(void)
 {
@@ -88,6 +115,8 @@ void switch_to(struct task_struct * next)
 			80d58:       9400083b        bl      82e44 <cpu_switch_to>
 		==> 80d5c:       14000002        b       80d64 <switch_to+0x58>
 	*/
+
+	//Here is where we left
 	cpu_switch_to(prev, next);  /* will branch to @next->cpu_context.pc ...*/
 }
 

@@ -4,8 +4,10 @@
 #include "peripherals/timer.h"
 #include "timer.h"
 
+
+// Todo： Set the interval of rescheduling to be roughly 100 ms. 
 #ifdef USE_QEMU
-int interval = (1 << 26); // xzl: around 1 sec
+int interval = (1 << 26) / 10; // change the interval to be 100ms = 1s / 10
 #else
 int interval = 1 * 1000 * 1000; // xzl: around 1 sec
 #endif
@@ -22,9 +24,15 @@ void generic_timer_init ( void )
 }
 
 void handle_generic_timer_irq( void ) 
-{
-	gen_timer_reset(interval);
-    timer_tick();
+{	
+	if (record_num > 50) {
+		switch_to(task[0]);
+		gen_timer_reset((1 << 30));
+	} else {
+		gen_timer_reset(interval);
+    	timer_tick();
+		printf("back to Handler");
+	}
 }
 
 /* 

@@ -2,6 +2,7 @@
 #include "sched.h"
 #include "entry.h"
 
+// Todo: add the initial record to trace each task;
 int copy_process(unsigned long fn, unsigned long arg)
 {
 	preempt_disable();
@@ -17,9 +18,10 @@ int copy_process(unsigned long fn, unsigned long arg)
 
 	p->cpu_context.x19 = fn;
 	p->cpu_context.x20 = arg;
-	p->cpu_context.pc = (unsigned long)ret_from_fork;	// entry.S
+	p->cpu_context.pc = (unsigned long)ret_from_fork;
 	p->cpu_context.sp = (unsigned long)p + THREAD_SIZE;
 	int pid = nr_tasks++;
+	p->pid = pid;
 	task[pid] = p;	
 	preempt_enable();
 	return 0;
