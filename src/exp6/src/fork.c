@@ -31,6 +31,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
 	p->priority = current->priority;
 	p->state = TASK_RUNNING;
 	p->counter = p->priority;
+	// p->counter = 3;
 	p->preempt_count = 1; //disable preemtion until schedule_tail
 	// @page is 0-filled, many fields (e.g. mm.pgd) are implicitly init'd
 	

@@ -33,7 +33,7 @@ void kernel_main()
 
 	irq_vector_init();
 	timer_init();
-//	generic_timer_init();
+	generic_timer_init();
 	enable_interrupt_controller();
 	enable_irq();
 

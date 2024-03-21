@@ -82,7 +82,7 @@ el1_entry:
 	adrp	x0, idmap_dir
 	msr	ttbr0_el1, x0
 #endif
-	// Todo: Enable kernel to access other section of the physical memory, modify the kernel table tree. 
+
 	bl 	__create_page_tables
 
 	mov	x0, #VA_START			
@@ -95,6 +95,7 @@ el1_entry:
 	ldr	x0, =(TCR_VALUE)		
 	msr	tcr_el1, x0 
 
+	//mair_el1: The MAIR register provides mappings between memory types and attributes, specify how memory accesses should behave in terms of caching, write policy, and access permissions. For example, attributes might define memory regions as cacheable or non-cacheable, write-back or write-through, and with various levels of access permissions (e.g., read-only, read-write).
 	ldr	x0, =(MAIR_VALUE)
 	msr	mair_el1, x0
 
@@ -133,6 +134,16 @@ el1_entry:
 	orr	\tmp2, \tmp2, #MM_TYPE_PAGE_TABLE		// tmp2: make a table descriptor. set bits[0:1] to 1. 
 	str	\tmp2, [\tbl, \tmp1, lsl #3]			// store descriptor (tmp2) to the current pgtable at index (tmp1)
 	add	\tbl, \tbl, #PAGE_SIZE					// point @tbl to the newly create next level pgtable. programming ease
+	.endm
+
+	.macro	create_table_entry_1, tbl, virt, shift, tmp1, tmp2
+	lsr	\tmp1, \virt, #\shift
+	and	\tmp1, \tmp1, #PTRS_PER_TABLE - 1		// Todo: How can I get the index 1 instead of 0 in the PUD table.
+	add \tmp1, \tmp1, #1
+	add	\tmp2, \tbl, #PAGE_SIZE * 2					// tmp2: addr of a next level pgtable (PUD or PMD). 
+	orr	\tmp2, \tmp2, #MM_TYPE_PAGE_TABLE		// tmp2: make a table descriptor. set bits[0:1] to 1. 
+	str	\tmp2, [\tbl, \tmp1, lsl #3]			// store descriptor (tmp2) to the current pgtable at index (tmp1)
+	add	\tbl, \tbl, #PAGE_SIZE * 2					// point @tbl to the newly create next level pgtable. programming ease
 	.endm
 
 	// Populating entries in a PMD table for a given virt addr range 
@@ -182,6 +193,7 @@ __create_page_tables:
 
 	// clear the mem region backing pgtables
 	adrp 	x0, pg_dir
+	// Todo: Change the PG_DIR_SIZE to 4
 	mov		x1, #PG_DIR_SIZE
 	bl 		memzero
 
@@ -201,6 +213,22 @@ __create_page_tables:
 	ldr 	x2, =(VA_START + DEVICE_BASE)				// x2 = first virtual address
 	ldr		x3, =(VA_START + PHYS_MEMORY_SIZE - SECTION_SIZE)	// x3 = the virtual base of the last section
 	create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4
+
+
+	/*Todo: After finishing setting the first three table, I need to add another PMD table and add it into 
+	the PUG table. So I have to call create_table_entry again.
+	But first, I have to change the tbl, make it point to the PUD page.
+	*/ 
+ 	adrp	x0, pg_dir
+	mov		x1, #VA_START 	
+	add	x0, x0, #PAGE_SIZE // move the tbl to the PUG table
+	// Create another PMD table
+	create_table_entry_1 x0, x1, PUD_SHIFT, x2, x3 // How can I create another PMD table which is two PAGE_SIZE way? How should I change the create_table_entry macro?
+	//Populate the new PMD table
+    mov x1, #PHYS_MEMORY_SIZE  // Start of the new map in the new PWD
+    ldr x2, =(VA_START + PHYS_MEMORY_SIZE)  // First virtual address
+    ldr x3, =(VA_START + PHYS_MEMORY_SIZE + PHYS_MEMORY_SIZE - SECTION_SIZE)  // Last virtual address
+    create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4
 
 	mov	x30, x29						// restore return address
 	ret
